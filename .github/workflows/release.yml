@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v[0-9]+.[0-9]*
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: write
+  packages: write
+  actions: read
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      actions: read
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4
+
+    - name: Login to Container registry
+      uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push image
+      id: build
+      uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7
+      with:
+        context: .
+        push: true
+        tags: |
+          ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          ghcr.io/${{ github.repository }}:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        platforms: linux/amd64,linux/arm64
+
+    - name: Generate SBOM
+      uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+      with:
+        image: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+        format: cyclonedx-json
+        artifact-name: ${{ github.repository }}-${{ github.ref_name }}.cdx.json
+
+    - name: Update CHANGELOG
+      id: changelog
+      uses: requarks/changelog-action@b78a3354a01f4a1affb484b9264b506a815c46b1 # v1
+      with:
+        token: ${{ github.token }}
+        tag: ${{ github.ref_name }}
+
+    - name: Create Release
+      uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1
+      with:
+        allowUpdates: true
+        draft: false
+        makeLatest: true
+        name: ${{ github.ref_name }}
+        body: |
+          ${{ steps.changelog.outputs.changes }}
+
+          ## Images
+
+          - ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+        artifacts: ${{ github.repository }}-${{ github.ref_name }}.cdx.json
+
+    - name: Publish SBOM
+      uses: anchore/sbom-action/publish-sbom@e22c389904149dbc22b58101806040fa8d37a610 # v0
+      with:
+        sbom-artifact-match: ".*\\.cdx\\.json$"
+
+    - name: Commit CHANGELOG.md
+      uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7
+      with:
+        branch: main
+        commit_message: 'docs: update CHANGELOG.md for ${{ github.ref_name }} [skip ci]'
+        file_pattern: CHANGELOG.md

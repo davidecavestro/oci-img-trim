@@ -1,0 +1,48 @@
+name: Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install shellcheck
+      run: sudo apt-get install -y shellcheck
+
+    - name: Lint main.sh
+      run: shellcheck -S warning main.sh
+
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build image
+      run: docker build -t oci-img-trim .
+
+    - name: Verify help output
+      run: |
+        docker run --rm oci-img-trim --help || true
+
+    - name: Verify regctl is functional
+      run: |
+        docker run --rm --entrypoint regctl oci-img-trim version
+
+    - name: Upload test artifacts
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-logs
+        path: "*.log"
+        retention-days: 7
