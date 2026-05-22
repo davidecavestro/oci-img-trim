@@ -2,7 +2,7 @@
 
 TOOL_IMAGE="oci-img-trim"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+cd "$SCRIPT_DIR" || exit
 
 echo "🛠️  Building $TOOL_IMAGE..."
 docker build -t "$TOOL_IMAGE" . -q

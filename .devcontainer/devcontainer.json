@@ -1,0 +1,31 @@
+{
+    "name": "oci-img-trim",
+    "build": {
+        "dockerfile": "../Dockerfile",
+        "target": "dev",
+        "context": ".."
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+            "version": "latest",
+            "installDockerBuildx": true
+        }
+    },
+    // Override the production ENTRYPOINT so the container stays open for development
+    "overrideCommand": true,
+    // Mount host Docker config so regctl can reuse existing registry logins
+    "mounts": [
+        "source=${localEnv:HOME}/.docker/config.json,target=/root/.docker/config.json,type=bind,consistency=cached"
+    ],
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-azuretools.vscode-docker",
+                "rogalmic.bash-debug",
+                "timonwong.shellcheck",
+                "github.vscode-github-actions"
+            ]
+        }
+    },
+    "remoteUser": "root"
+}

@@ -74,7 +74,6 @@ human_size() {
 echo "Fetching manifest for $IMAGE (platform: $PLATFORM)..."
 
 TOP_MANIFEST=$(regctl manifest get --format raw-body "$IMAGE" 2>/dev/null)
-SCHEMA=$(echo "$TOP_MANIFEST" | jq -r '.mediaType // .schemaVersion // "unknown"')
 
 if echo "$TOP_MANIFEST" | jq -e '.manifests' >/dev/null 2>&1 && ! echo "$TOP_MANIFEST" | jq -e '.layers' >/dev/null 2>&1; then
     echo "  Info: this is a multi-platform manifest list; showing platform '$PLATFORM'."
@@ -212,8 +211,8 @@ if [ ${#SELECTED_INDICES[@]} -eq 0 ]; then
 fi
 
 # Sort indices ascending for display, descending for removal
-IFS=$'\n' SELECTED_SORTED_ASC=($(printf '%s\n' "${SELECTED_INDICES[@]}" | sort -n)); unset IFS
-IFS=$'\n' SELECTED_SORTED_DESC=($(printf '%s\n' "${SELECTED_INDICES[@]}" | sort -rn)); unset IFS
+mapfile -t SELECTED_SORTED_ASC  < <(printf '%s\n' "${SELECTED_INDICES[@]}" | sort -n)
+mapfile -t SELECTED_SORTED_DESC < <(printf '%s\n' "${SELECTED_INDICES[@]}" | sort -rn)
 
 echo ""
 echo "Layers selected for removal:"
