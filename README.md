@@ -13,16 +13,9 @@ Under the hood it uses [regctl](https://github.com/regclient/regclient) (`regctl
 ## Usage
 
 ```bash
-./docker-run-trim.sh <image> [--platform <platform>]
-```
-
-Or build and run directly:
-
-```bash
-docker build -t oci-img-trim .
 docker run -it --rm \
   -v $HOME/.docker/config.json:/root/.docker/config.json:ro \
-  oci-img-trim myregistry.io/myrepo:tag
+  ghcr.io/davidecavestro/oci-img-trim:latest myregistry.io/myrepo:tag
 ```
 
 To enable the **load into local Docker daemon** option, also mount the Docker socket:
@@ -31,12 +24,18 @@ To enable the **load into local Docker daemon** option, also mount the Docker so
 docker run -it --rm \
   -v $HOME/.docker/config.json:/root/.docker/config.json:ro \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  oci-img-trim myregistry.io/myrepo:tag
+  ghcr.io/davidecavestro/oci-img-trim:latest myregistry.io/myrepo:tag
 ```
 
-`docker-run-trim.sh` detects `/var/run/docker.sock` automatically and mounts it when present.
-
 Add `--platform linux/amd64` (or any OCI platform string) to target a specific platform of a multi-platform image.
+
+### Convenience script
+
+If you have cloned the repository, `docker-run-trim.sh` wraps the above and detects `/var/run/docker.sock` automatically:
+
+```bash
+./docker-run-trim.sh <image> [--platform <platform>]
+```
 
 ## Interactive flow
 
@@ -83,13 +82,17 @@ For credential helpers (e.g. `docker-credential-ecr-login`) you may need to moun
 Remove one or more layers from a private image, pushing to a new tag:
 
 ```bash
-./docker-run-trim.sh myregistry.io/myapp:v1.2.3
+docker run -it --rm \
+  -v $HOME/.docker/config.json:/root/.docker/config.json:ro \
+  ghcr.io/davidecavestro/oci-img-trim:latest myregistry.io/myapp:1.2.3
 # interactive selection...
-# > Push to a different tag: myregistry.io/myapp:v1.2.3-slim
+# > Push to a different tag: myregistry.io/myapp:1.2.3-slim
 ```
 
 Target a specific platform of a multi-arch image:
 
 ```bash
-./docker-run-trim.sh myregistry.io/myapp:latest --platform linux/arm64
+docker run -it --rm \
+  -v $HOME/.docker/config.json:/root/.docker/config.json:ro \
+  ghcr.io/davidecavestro/oci-img-trim:latest myregistry.io/myapp:latest --platform linux/arm64
 ```
