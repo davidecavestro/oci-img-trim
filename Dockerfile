@@ -4,8 +4,10 @@ RUN apk add --no-cache \
     bash \
     bc \
     curl \
+    docker-cli \
     fzf \
     jq \
+    zstd \
     && REGCTL_VER=$(curl -s https://api.github.com/repos/regclient/regclient/releases/latest | grep '"tag_name"' | sed 's/.*"tag_name": "\(.*\)".*/\1/') \
     && curl -fsSL "https://github.com/regclient/regclient/releases/download/${REGCTL_VER}/regctl-linux-amd64" \
        -o /usr/local/bin/regctl \

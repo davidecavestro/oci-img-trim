@@ -49,10 +49,11 @@ jobs:
         tags: |
           type=ref,event=branch
           type=ref,event=pr
+          type=ref,event=tag
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
           type=semver,pattern={{major}}.{{minor}}.{{patch}}
-          type=sha,prefix={{branch}}-
+          type=sha,prefix={{branch}}-,enable=${{ startsWith(github.ref, 'refs/heads/') }}
         labels: |
           org.opencontainers.image.title=oci-img-trim
           org.opencontainers.image.description=Interactive CLI tool to selectively remove layers from OCI container images

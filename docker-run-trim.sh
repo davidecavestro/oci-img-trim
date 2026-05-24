@@ -8,9 +8,11 @@ echo "🛠️  Building $TOOL_IMAGE..."
 docker build -t "$TOOL_IMAGE" . -q
 
 echo "🚀 Launching interactive container..."
-docker run -it --rm \
-    -v "$HOME/.docker/config.json:/root/.docker/config.json:ro" \
-    "$TOOL_IMAGE" "$@"
+DOCKER_OPTS=(-it --rm -v "$HOME/.docker/config.json:/root/.docker/config.json:ro")
+if [ -S /var/run/docker.sock ]; then
+    DOCKER_OPTS+=(-v "/var/run/docker.sock:/var/run/docker.sock")
+fi
+docker run "${DOCKER_OPTS[@]}" "$TOOL_IMAGE" "$@"
 
 if [ $? -eq 0 ]; then
     echo "✨ Workflow finished successfully."
