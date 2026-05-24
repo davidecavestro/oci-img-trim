@@ -3,7 +3,7 @@ name: Build and Publish
 on:
   push:
     branches: [ main, develop ]
-    tags: [ 'v*' ]
+    tags: [ '[0-9]*.[0-9]*.[0-9]*' ]
   pull_request:
     branches: [ main ]
 
@@ -82,6 +82,7 @@ jobs:
         image: ${{ steps.image.outputs.image }}
         format: spdx-json
         output-file: sbom.spdx.json
+        upload-release-assets: false
 
     - name: Upload SBOM artifact
       uses: actions/upload-artifact@v4
